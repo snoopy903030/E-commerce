@@ -1,20 +1,19 @@
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import Select
-from decimal import *
 import time
+import os.path
+import csv
+
+
 
 global wd
 wd = webdriver.Firefox(executable_path="C:\\Webdriver\\geckodriver.exe")
-# global url
-# url = "http://live.demoguru99.com/index.php/"
-# wd.get(url)
-# wd.implicitly_wait(20)
 
-def OpenURL():
-    #wd = webdriver.Firefox(executable_path="C:\\Webdriver\\geckodriver.exe")
-    url = "http://live.demoguru99.com/index.php/"
-    wd.get(url)
+def OpenURL(strURL):
+    if strURL == "":
+        strURL = "http://live.demoguru99.com/index.php/"
+    wd.get(strURL)
     wd.implicitly_wait(20)
 
 def CheckWindowTitle(strExpectedTitle):
@@ -57,6 +56,7 @@ def ClickBtn(strBtnName,strLocName, strLocValue):
     if btn!= None:
         #print("Find the Button "+strBtnName+" on the web page.")
         btn.click()
+        print("Button: ["+strBtnName + "] clicked.")
     else:
         print("Can't find "+strBtnName+" Button on the web page.")
 
@@ -227,7 +227,7 @@ def VerifyShippingCost(strExpectedCost):
         print("The calculated shipping cost is: $"+strShippingCost)
 
         try:
-            assert Decimal(strShippingCost) == Decimal(strExpectedCost)
+            assert float(strShippingCost) == float(strExpectedCost)
             print("The shipping cost is correct.")
 
         except AssertionError:
@@ -264,7 +264,7 @@ def CalculateTotalCost(strPricewoShipping, strShippingCost):
 
     strTotalPrice = FindElement("css_selector",'[class="a-right last"] strong .price').text.replace('$','')
     try:
-        assert Decimal(strPricewoShipping) + Decimal(strShippingCost) == Decimal(strTotalPrice)
+        assert float(strPricewoShipping) + float(strShippingCost) == float(strTotalPrice)
         print("Calculated Total Price is: "+ strTotalPrice)
     except AssertionError:
         print("Something went wrong when check total price.")
@@ -322,5 +322,57 @@ def GetPreviousOrderStatus(strOrderNo,strExpectedStatus,LinkBtnToClick):
     if LinkBtnToClick == " Reorder":
         LinkBtn = OrderTable.find_elements_by_css_selector('#my-orders-table tbody a')[1]
     LinkBtn.click()
+
+
+#Click Menu Items or SubMenuItem
+#When only click the Menu Item, passing strSubMenuItem as None
+def ClickMenuItem(strMenuItem, strSubMenuItem):
+    Menuitems = wd.find_elements_by_css_selector('#nav [class*="parent level0"]')
+    print('the length of the Menu is: %s' % len(Menuitems))
+    for i in range(len(Menuitems)):
+        MenuItemName = Menuitems[i].text
+        if MenuItemName == strMenuItem:
+            action = ActionChains(wd)
+            action.move_to_element(Menuitems[i]).perform()
+            if strSubMenuItem == None:
+                Menuitems[i].click()
+                return True
+            SubMenuItems = wd.find_elements_by_css_selector('#nav li a span')
+            if SubMenuItems != None:
+                print("The length of Sub Menu Items: %s" % len(SubMenuItems))
+                for a in range(len(SubMenuItems)):
+                        print ("a is %s" % a)
+                        SubMenuItemsName = SubMenuItems[a].text
+                        print(SubMenuItemsName)
+                        if SubMenuItemsName == strSubMenuItem:
+                            SubMenuItems[a].click()
+                            return True
+                else:
+                    print('Cannot find Sub Menu Item: '+ strSubMenuItem)
+                    return False
+            else:
+                print('There is no Sub Menu Items object.')
+                return False
+    else:
+        print('Cannot find Menu Item '+ strMenuItem)
+        return False
+
+#Read download file and display all info in console windows
+def CheckFileExists(strFilePath):
+    blResult = os.path.exists(strFilePath)
+    if blResult == True:
+        print("The file: "+ strFilePath+" is exist.")
+    else:
+        print("The file: "+ strFilePath+" is not exist.")
+
+# # read csv file and print in console
+# # add encoding = 'uft-8' to avoid the unicode decode error
+def ReadCSVFile(strFilePath):
+    with open(strFilePath, newline='',encoding='utf-8') as csvfile:
+        csv_reader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+        for row in csv_reader:
+            print(' '.join(row))
+
+
 
 

@@ -1,10 +1,11 @@
 import pytest
 from Scripts import *
+from selenium.webdriver.common.keys import Keys
 
 class Test_Ecomcases:
 
     def setup_method(self):
-        OpenURL()
+        OpenURL("")
 
     #Varify items in Mobile list Page can be sorted by "Name“
     def test_Day1(self):
@@ -125,3 +126,52 @@ class Test_Ecomcases:
                 break
         wd.close()
         wd.switch_to.window(main_window)
+
+    def test_Day8(self):
+        ClickBtn("Mobile", "css_selector", '[href *="mobile.html"]')
+
+        # Add  Iphone to Cart
+        ItemList = GetProductInfo("Iphone")
+        ItemList.find_element_by_css_selector('button[title="Add to Cart"]').click()
+        TypetoInputBox('css_selector', '#coupon_code', 'GURU50')
+        ClickBtn("Apply", 'css_selector', 'button[title="Apply"]')
+        Items = wd.find_elements_by_css_selector('.cart-totals tbody tr td')
+        strWholePrice = Items[1].text.replace('$', '')
+
+        if Items[2].text.startswith('DISCOUNT'):
+            print('Found Discount rows.')
+
+        strDisAmount = Items[3].text.replace("-$", "")
+        assert float(strWholePrice) * float(0.05) == float(strDisAmount)
+
+class Test_Ecom_Backend:
+
+    #Export csv file and read in console
+    def test_Day9(self):
+
+        # Login to backend
+        OpenURL("http://live.demoguru99.com/index.php/backendlogin/index/index/key/878beb4c9acc9346cd394145d8b2c01c/")
+        TypetoInputBox('id', 'username', 'user01')
+        TypetoInputBox('id', 'login', 'guru99com')
+        ClickBtn("Login", 'css_selector', '.form-button[title="Login"]')
+
+        # Close popup messages
+        FindElement('css_selector', '[onclick="closeMessagePopup(); return false;"]').click()
+
+        # Go to Sales->Order
+        ClickMenuItem('Sales', 'Orders')
+
+        # Export Orders as CSV file
+        Format = FindElement('id', 'sales_order_grid_export')
+        selectFormat = Select(Format)
+        selectFormat.select_by_visible_text("CSV")
+        ClickBtn("Export", 'css_selector', 'button[title="Export"]')
+
+        #Handle system dialog
+        action = ActionChains(wd)
+        action.send_keys(Keys.ALT, "s").perform()
+        action.send_keys(Keys.ENTER).perform()
+
+        #Read CSV file in console
+        # CheckFileExists('C:\\Users\\cathy\\Downloads\\orders.csv')
+        # ReadCSVFile('C:\\Users\\cathy\\Downloads\\orders.csv')
