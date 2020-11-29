@@ -6,7 +6,8 @@ import os.path
 import csv
 
 
-
+#
+#
 global wd
 wd = webdriver.Firefox(executable_path="C:\\Webdriver\\geckodriver.exe")
 
